@@ -1,0 +1,12 @@
+Pour créer un nouveau projet node, il faut créer un dossier
+-mkdir projet1
+Puis naviguer dans le dossier:
+-cd project1
+Initialiser le projet (création package.json)
+-npm init --yes
+
+le fichier package.json contient les informations de notre
+notre projet(nom, dépendances, scripts, l'auteur)
+
+npm (Node Package Manager -Gestionnaire de paquets:permet
+de télécharcher et d'installer dont on aura besoin dans notre projet)
