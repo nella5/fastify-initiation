@@ -18,7 +18,7 @@ fastify.get('/me',function(){
 return{
 	prenom:"Ornella",
 	nom:"lisongo",
-	job:"developpeur",
+	job:"cpw",
 }
 
 })
