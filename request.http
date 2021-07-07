@@ -49,4 +49,18 @@ Content-Type: application/json
 
 DELETE http://localhost:4000/heroes/60e45294c308fa040c8e23eb
 
+###
 
+
+POST http://localhost:4000/users
+Content-Type: application/json
+
+{
+	"email": "medhi@email.com",
+	"password": "medhi",
+	"role": "user"
+}
+
+###
+GET http://localhost:4000/users
+  
