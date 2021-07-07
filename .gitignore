@@ -1,6 +1,5 @@
-#Dossiers
+# Dossiers
 node_modules/
 
-#Lock files
-
+# Lock files
 package-lock.json

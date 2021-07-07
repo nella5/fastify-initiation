@@ -1,61 +1,106 @@
 // Require the framework and instantiate it
 const fastify = require('fastify')({ logger: true })
+const {ObjectId}= require('mongodb')
 
-//Connexion à la bdd
+
+// Connexion à la BDD
 fastify.register(require('fastify-mongodb'), {
- 
-  // the default value is false
   forceClose: true,
-  
   url: 'mongodb://localhost:27017/superheroes'
 })
-//METHOD API REST
-//GET -READ
-//POST-CREATE
-//PATCH/PUT - UPDATE
-//DELETE -DELETE
+
+// METHOD API REST
+// GET - READ
+// POST - CREATE
+// PATCH / PUT - UPDATE
+// DELETE - DELETE
+
 // Declare a route
 fastify.get('/', (request, reply) => {
+	// Ici on retourne un objet javascript qui va être converti en JSON (JavaScript Object Notation)
   return { hello: 'world' }
 })
 
-//Déclarer la route/heroes - Cette route retournera 
-//la liste des avengers
-const avengers=["Iron man", "Captain america", "Spiderman"]
- // heroes GET - obtiens la liste des héros
-fastify.get('/heroes',()=>{
-return{
-	avengers
-}
- })
- 
+// Déclarer la route /heroes - Cette route retournera la liste des heros
+// /heroes GET - Obtiens la liste des héros
+fastify.get('/heroes', async () => {
+	const collection = fastify.mongo.db.collection("heroes")
+	const result = await collection.find({}).toArray()
+	return result
+})
+
+//heroes/bio/id
+//Cette route devra retourner:nomduHero connu sous le nom de VraiNom
+
+fastify.get('/heroes/bio/:heroesId', async (request, reply) => {
+	const collection = fastify.mongo.db.collection('heroes')
+	const { heroesId } = request.params
+	const result = await collection.findOne({
+		_id: new ObjectId(heroesId)
+	})
+	const {name, biography, powerstats} = result
+	//const name = result.name
+	//const biography = result.biography
+	//const powerstats = result.powerstats
+
+	// Template literals: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
+	return `${name} connu sous le nom de ${biography["full-name"]}. Je suis née à ${biography["place-of-birth"]}. J'ai ${intelligence} en intelligence, et ${speed} en vitesse.`
+
+	//Version ES5(vieux JS)
+	//const name = result.name
+	//const fullname= result.biography["full-name"]
+	//const intelligence = result.powerstats.intelligence
+	//const speed = result.powerstats.speed
+
+	// return name + "connu sous le nom de " + fullName+.Je suis née à " +placeOfBirth+". J'ai" + intelligence
+	//"en intelligence, et + " en vitesse."
+})
+
+
+// /heroes/69 GET -Obtiens le héros ayant l'id 69
+fastify.get('/heroes/:heroesId', async(request,reply)=>{
+
+	const {heroesId }= request.params
+	const collection = fastify.mongo.db.collection("heroes")
+	const result = await collection.findOne({
+_id:new ObjectId(heroesId)
+	})
+return result
+})
+	
+	
 
 // /heroes POST - Ajoute un nouvel héro
-fastify.post('/heroes', (request, reply) => {
-	console.log(request.body)
-  const collection =fastify.mongo.db.collection("heroes")
-  console.log(collection)
-  collection.insertOne({
-name:request.body.name,
-powerstats:request.body.powerstats,
-
-  })
-	return request.body
+fastify.post('/heroes', async (request, reply) => {
+	const collection = fastify.mongo.db.collection('heroes')
+	const result = await collection.insertOne(request.body)
+	return result.ops[0].name
+	// reply.send(null)
 })
 
-fastify.get('/me',function(){
-  console.log("Route/heroes en POST atteinte")
-return{
-	prenom:"Ornella",
-nom:"lisongo",
-	job:"cpw",
-  //toto
-}
+fastify.delete('/heroes/:heroesId', async(request, reply)=>{
+const collection = fastify.mongo.db.collection('heroes')
+const{heroesId} = request.params
+const result = await collection.findOneAndDelete({
+	_id:new ObjectId(heroesId)
+})
+return result
 
 })
+
+fastify.get('/me', function () {
+	return {
+		prenom: "Ornella",
+		nom: "Lisongo",
+		job: "cpw and dev"
+	}
+})
+
+
 // Run the server!
 const start = async () => {
   try {
+		console.log("Serveur lancé: http://localhost:4000")
     await fastify.listen(4000)
   } catch (err) {
     fastify.log.error(err)
@@ -63,3 +108,5 @@ const start = async () => {
   }
 }
 start()
+
+

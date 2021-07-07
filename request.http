@@ -1,9 +1,9 @@
 GET http://localhost:4000/me
-###
 
+###
 GET http://localhost:4000/heroes
-###
 
+###
 POST http://localhost:4000/heroes
 Content-Type: application/json
 
@@ -28,3 +28,12 @@ Content-Type: application/json
 		"alignment": "good"
 	}
 }
+
+###
+GET http://localhost:4000/heroes/60e46e138b722023ac406e1b
+
+###
+
+GET http://localhost:4000/heroes/bio/60e45294c308fa040c8e23eb
+
+
