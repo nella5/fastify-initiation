@@ -51,8 +51,8 @@ POST http://localhost:4000/users
 Content-Type: application/json
 
 {
-	"email": "medhi@email.com",
-	"password": "medhi",
+	"email": "medhi3@email.com",
+	"password": "me",
 	"role": "user"
 }
 
@@ -73,3 +73,17 @@ Content-Type: application/json
 
 ###
 DELETE http://localhost:4000/users/60e5c047c179526850bdc822
+
+
+###
+POST http://localhost:4000/login
+Content-Type: application/json
+
+{
+	"email": "medhi2@email.com",
+	"password": "medhi"
+}
+
+###
+GET http://localhost:4000/protected
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwZTZkMTU4NjdhZGI1M2NkY2JhY2FhYSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNjI1NzUzOTQyfQ.bSuxO2z_-ZDXtFZ4bgvqucrkNqDML2e81rxrXXnxzKo

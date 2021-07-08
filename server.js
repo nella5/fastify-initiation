@@ -4,11 +4,20 @@ const { ObjectId } = require('mongodb') // https://docs.mongodb.com/drivers/node
 const argon2 = require('argon2') // https://www.npmjs.com/package/argon2
 const createError = require('http-errors') // https://www.npmjs.com/package/http-errors
 
-// Connexion à la BDD
-fastify.register(require('fastify-mongodb'), {
-	forceClose: true,
-	url: 'mongodb://localhost:27017/superheroes',
+fastify.register(require('fastify-jwt'), {
+  secret: 'monsupersecretamoiestungangster'
 })
+
+fastify.register(require('fastify-cors'), {
+	origin: "*"
+})
+
+
+// Connexion à la BDD
+fastify.register(require('./connector'))
+
+// Importation des routes /heroes
+fastify.register(require('./src/routes/heroes'))
 
 // METHOD API REST
 // GET - READ
@@ -20,84 +29,6 @@ fastify.register(require('fastify-mongodb'), {
 fastify.get('/', (request, reply) => {
 	// Ici on retourne un objet javascript qui va être converti en JSON (JavaScript Object Notation)
 	return { hello: 'world' }
-})
-
-// Déclarer la route /heroes - Cette route retournera la liste des heros
-// /heroes GET - Obtiens la liste des héros
-fastify.get('/heroes', async () => {
-	const collection = fastify.mongo.db.collection('heroes')
-	const result = await collection.find({}).toArray()
-	return result
-})
-
-// /heroes/69 GET - Obtiens le héros ayant l'id 69
-// /heroes/:heroId ... findOne()
-fastify.get('/heroes/:heroesId', async (request, reply) => {
-	// Documentation: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
-	// const heroesId = request.params.heroesId
-	const { heroesId } = request.params
-	const collection = fastify.mongo.db.collection('heroes')
-	const result = await collection.findOne({
-		_id: new ObjectId(heroesId),
-	})
-	return result
-})
-
-// /heroes/bio/id
-// Cette route devra retourner: nomDuHero connu sous le nom de vraiNom. Je suis née à lieuDeNaissance. J'ai XX en intelligence, et YY en vitesse.
-fastify.get('/heroes/bio/:heroesId', async (request, reply) => {
-	const collection = fastify.mongo.db.collection('heroes')
-	const { heroesId } = request.params
-	const result = await collection.findOne({
-		_id: new ObjectId(heroesId),
-	})
-
-	// Version ES6
-	const {
-		name,
-		biography,
-		powerstats: { intelligence, speed },
-	} = result
-
-	// Template literals: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
-	return `${name} connu sous le nom de ${biography['full-name']}. Je suis née à ${biography['place-of-birth']}. J'ai ${intelligence} en intelligence, et ${speed} en vitesse.`
-
-	// Version ES5 (vieux JS)
-	// const name = result.name
-	// const fullName = result.biography["full-name"]
-	// const placeOfBirth = result.biography["full-name"]
-	// const intelligence = result.powerstats.intelligence
-	// const speed = result.powerstats.speed
-
-	// return name + " connu sous le nom de " + fullName + ". Je suis née à " + placeOfBirth + ". J'ai " + intelligence + " en intelligence, et + " + speed + " en vitesse."
-})
-
-// /heroes POST - Ajoute un nouvel héro
-fastify.post('/heroes', async (request, reply) => {
-	const collection = fastify.mongo.db.collection('heroes')
-	const result = await collection.insertOne(request.body)
-	return result.ops[0]
-	// reply.send(null)
-})
-
-fastify.delete('/heroes/:heroesId', async (request, reply) => {
-	const collection = fastify.mongo.db.collection('heroes')
-	const { heroesId } = request.params
-	const result = await collection.findOneAndDelete({
-		_id: new ObjectId(heroesId)
-	})
-	return result
-})
-
-fastify.patch('/heroes/:id', async (request, reply) => {
-	const collection = fastify.mongo.db.collection('heroes')
-	const { id } = request.params
-	const result = await collection.findOneAndUpdate(
-		{ _id: new ObjectId(id) },
-		{ $set: request.body },
-		{ returnDocument: 'after' },
-	)
-	return result
 })
 
 fastify.get('/me', function () {
@@ -165,6 +96,41 @@ fastify.get('/users', async (request, reply) => {
 	const collection = fastify.mongo.db.collection('users')
 	const result = await collection.find().toArray()
 	return result
+})
+
+fastify.post('/login', async (request, reply) => {
+	// Je récupère l'email et le password dans request,
+	// Je cherche si un utiliseur possede cet email,
+	// S'il existe, on vérifie que les password correspondent
+	// Sinon, on génère une erreur
+
+	const { email, password } = request.body
+	console.log({email, password})
+	const collection = fastify.mongo.db.collection('users')
+
+	const userExists = await collection.findOne({ email })
+
+	if (!userExists) {
+		return createError(400, "Email et/ou mot de passe incorrect")
+	}
+
+	const match = await argon2.verify(userExists.password, password)
+
+	if (!match) {
+		return createError(400, "Email et/ou mot de passe incorrect")
+	}
+
+	// Je sais que l'email et le mot de passe sont corrects, j'envoi un token au client (permettant d'ainsi l'authentifier)
+	const token = fastify.jwt.sign({ id: userExists._id, role: userExists.role })
+
+	return { token }
+})
+
+fastify.get('/protected', async (request, reply) => {
+	// Si l'utilisateur ne m'envoie pas de token, je dois lui retourner une erreur
+	// Sinon, je lui retourne un objet contenant la propriété message avec Bienvenue comme valeur
+	await request.jwtVerify()
+	return { message: "Bienvenue" }
 })
 
 fastify.get('/users/:id', async (request, reply) => {
