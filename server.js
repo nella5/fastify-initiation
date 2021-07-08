@@ -98,7 +98,13 @@ fastify.patch('/heroes/:id', async (request, reply) => {
 	return result
 })
 
-
+fastify.get('/me', function () {
+	return {
+		prenom: 'Fabio',
+		nom: 'Ginja Domingues',
+		job: 'developpeur',
+	}
+})
 
 // Je souhaite:
 // Une route qui me permette de créer un nouvel utilisateur (user) dans une collection users
@@ -122,15 +128,34 @@ fastify.get('/users', async (request, reply) => {
 	return result
 })
 
-
-fastify.post('/me', function () {
-	return {
-		prenom: 'Fabio',
-		nom: 'Ginja Domingues',
-		job: 'developpeur',
-	}
+fastify.get('/users/:id', async (request, reply) => {
+	const collection = fastify.mongo.db.collection('users')
+	// const id = request.params.id
+	const { id } = request.params
+	const result = await collection.findOne({_id: new ObjectId(id)})
+	// reply.code(200).send(result)
+	return result
 })
 
+fastify.patch('/users/:id', async (request, reply) => {
+	const collection = fastify.mongo.db.collection('users')
+	const { id } = request.params
+	const result = await collection.findOneAndUpdate(
+		{ _id: new ObjectId(id) },
+		{ $set: request.body },
+		{ returnDocument: "after" }
+	)
+	reply.code(200).send(result)
+	// return result
+})
+
+fastify.delete('/users/:id', async (request, reply) => {
+	const collection = fastify.mongo.db.collection('users')
+	const { id } = request.params
+	const res = await collection.findOneAndDelete({_id: new ObjectId(id)})
+	// return res
+	reply.code(200).send(res)
+})
 
 // Run the server!
 const start = async () => {
