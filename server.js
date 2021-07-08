@@ -1,6 +1,7 @@
 // Require the framework and instantiate it
 const fastify = require('fastify')({ logger: true })
 const { ObjectId } = require('mongodb')
+const argon2 = require('argon2')
 
 // Connexion à la BDD
 fastify.register(require('fastify-mongodb'), {
@@ -117,9 +118,23 @@ fastify.get('/me', function () {
 // Une route qui me permette de supprimer un utilisateur par son id
 
 fastify.post('/users', async (request, reply) => {
-	const collection = fastify.mongo.db.collection('users')
-	const result = await collection.insertOne(request.body)
-	return result.ops[0]
+	try {
+		const collection = fastify.mongo.db.collection('users')
+	
+		// const password = request.body.password
+		const { password } = request.body
+		const hash = await argon2.hash(password)
+		const newUser = {
+			email: request.body.email,
+			password: hash,
+			role: request.body.role
+		}
+		const result = await collection.insertOne(newUser)
+		// return result.ops[0]
+		reply.code(201).send(result.ops[0])
+	} catch (err) {
+		console.error(err)
+	}
 })
 
 fastify.get('/users', async (request, reply) => {

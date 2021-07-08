@@ -61,3 +61,15 @@ GET http://localhost:4000/users
 
 ###
 GET http://localhost:4000/users/60e5c047c179526850bdc822
+
+
+###
+PATCH http://localhost:4000/users/60e5c047c179526850bdc822
+Content-Type: application/json
+
+{
+	"password": "secret"
+}
+
+###
+DELETE http://localhost:4000/users/60e5c047c179526850bdc822
