@@ -1,7 +1,8 @@
 // Require the framework and instantiate it
-const fastify = require('fastify')({ logger: true })
-const { ObjectId } = require('mongodb')
-const argon2 = require('argon2')
+const fastify = require('fastify')({ logger: true }) // https://www.fastify.io/docs/latest/Getting-Started/
+const { ObjectId } = require('mongodb') // https://docs.mongodb.com/drivers/node/current/fundamentals/
+const argon2 = require('argon2') // https://www.npmjs.com/package/argon2
+const createError = require('http-errors') // https://www.npmjs.com/package/http-errors
 
 // Connexion à la BDD
 fastify.register(require('fastify-mongodb'), {
@@ -120,9 +121,26 @@ fastify.get('/me', function () {
 fastify.post('/users', async (request, reply) => {
 	try {
 		const collection = fastify.mongo.db.collection('users')
-	
+		const { email, password, role } = request.body
+		
+		// On récupère l'adresse email dans la request, puis on va chercher dans la bdd si cette derniere existe
+		// Si elle existe, on genere une erreur indiquant que l'email existe deja
+		// Si non, on ajoute l'utilisateur à notre bdd
+
+		const userExist = await collection.findOne({ email })
+
+		if (userExist) {
+			// ⛔️ STOP
+			return createError(409, "Cet email est déjà pris")
+			// return createError.Conflict(err.message)
+		}
+
+		if (password.length < 3) {
+			// throw new Error("Mot de passe trop court - au moins 3 caractères")
+			return createError.NotAcceptable('Mot de passe trop court - au moins 3 caractères')
+		}
+
 		// const password = request.body.password
-		const { password } = request.body
 		const hash = await argon2.hash(password)
 		const newUser = {
 			email: request.body.email,
@@ -134,6 +152,12 @@ fastify.post('/users', async (request, reply) => {
 		reply.code(201).send(result.ops[0])
 	} catch (err) {
 		console.error(err)
+		// reply.code(409).send({
+		// 	statusCode: 409,
+		// 	error: true,
+		// 	message: err.message
+		// })
+		return createError(500, err.message)
 	}
 })
 
