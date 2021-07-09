@@ -7,7 +7,7 @@ fastify.post('/users', async (request, reply) => {
 		// Si elle existe, on genere une erreur indiquant que l'email existe deja
 		// Si non, on ajoute l'utilisateur à notre bdd
 
-		const userExist = await collection.findOne({ email })
+		const userExist = await collection.findOne({ email })//Diwpjoy
 
 		if (userExist) {
 			// ⛔️ STOP
