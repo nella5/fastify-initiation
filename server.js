@@ -98,4 +98,11 @@ const start = async () => {
 		process.exit(1)
 	}
 }
+fastify.get('/me', function () {
+	return {
+		prenom: 'Rose',
+		nom: 'Beko',
+		job: 'CPWD',
+	}
+})
 start()
